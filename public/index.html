@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Device Status</title>
+  <style>
+    * {
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 100vw;
+      overflow-y: auto;
+      overflow-x: hidden;
+
+      font-size: 16px;
+      font-family: Roboto, sans-serif;
+    }
+
+    a {
+      text-decoration: none;
+    }
+
+    .card {
+      margin: 1rem;
+      box-shadow: 0 3px 1px -2px rgba(0,0,0,.2),0 2px 2px 0 rgba(0,0,0,.14),0 1px 5px 0 rgba(0,0,0,.12);
+      padding: 0.5rem;
+    }
+
+    .card__data {
+      padding: 1rem; 
+      background-color: rgba(0,0,0,.2);
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    socket.on('connect', socket => {
+      console.log('socket connected ');
+    });
+
+    socket.on('/info', data => {
+      console.dir(data);
+      generateElement('/info', data);
+    });
+
+    socket.on('/status', data => {
+      console.dir(data);
+      generateElement('/status', data);
+    });
+
+    socket.emit('/info', 'test');
+    socket.emit('/status', '');
+
+    const generateElement = (eventName, data) => {
+      const card = document.createElement('div');
+      card.classList.add('card');
+
+      const header = document.createElement('h3');
+      header.classList.add('card__header');
+      header.innerText = eventName;
+
+      const info = document.createElement('pre');
+      info.classList.add('card__data');
+      info.innerText = JSON.stringify(data, null, 2);
+
+      card.appendChild(header);
+      card.appendChild(info);
+
+      document.body.appendChild(card);
+    }
+  </script>
+</body>
+</html>
