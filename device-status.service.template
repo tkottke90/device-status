@@ -1,0 +1,16 @@
+[Unit]
+Description=NodeJS Express service that provides and monitors system information
+Documentation=https://github.com/tkottke90/device-status
+After=network.target
+
+[Service]
+Environment=NODE_ENV=production
+Environment=HOST=127.0.0.1
+Environment=PORT=40000
+Type=simple
+User=dstatus
+ExecStart=/usr/bin/node /etc/device-status/device-status.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

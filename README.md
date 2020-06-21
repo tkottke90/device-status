@@ -12,4 +12,16 @@ To use this application, clone the repository and install the dependencies:
 
 ```
 # Clone repo:
-$ git clone 
+$ git clone git@github.com:tkottke90/device-status.git
+
+# Install dependencies
+$ npm i --production
+```
+
+After cloning run the `deploy.sh` command to copy the service template to your system.  Please note this needs to be done as root.
+
+The script will ask for the following:
+
+1. Host to attach the service to (optional)
+2. The port to attach the service to (optional)
+3. The location in your filesystem where the repository is located
