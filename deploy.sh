@@ -27,11 +27,12 @@ updateConfiguration() {
   value=$2
   file=$3
   
-  if grep -q $config $file; then
-    sed -i -e "s|[#]\?.*\b$config\b.*|$config=$value|g" $file
-
+  if grep -q "$config" $file; then
+    sed -i -e "s|\b$config\b=.*|$config=$value|g" $file
+ 
   else 
-    echo "$config $value" >> $file
+    echo "Configuration Not Found"
+    return
   fi
 
   echo ">    Updated $config to $value in $file"
@@ -57,6 +58,11 @@ undoScript() {
   systemd daemon-reload
 }
 
+abort() {
+  undoScript
+  exit 1
+}
+
 # ==================
 #   Main
 # ==================
@@ -70,8 +76,8 @@ read -p "> Host to attach service to (127.0.0.1): " -r app_host
 app_host=${app_host:-127.0.0.1}
 
 # Get host port to attach service to
-read -p "> Port to attach service to (40000): " -r app_port
-app_port=${app_port:-40000}
+read -p "> Port to attach service to (11000): " -r app_port
+app_port=${app_port:-11000}
 
 # Get project location
 read -p "> Location of application ($PWD): " -r app_local
@@ -84,25 +90,30 @@ else
   exit 1
 fi;
 
-
-if [[ ! ${id} ]]
-# Create service user
-echo "> Creating service user: dstatus"
+# Create service directory
 echo ">  Creating service directory: /etc/device-status"
 mkdir /etc/device-status
-echo ">  Creating user"
-useradd -s /usr/sbin/nologin --system -M -d /etc/device-status dstatus
-echo
+
+# Create service user if it does not exists
+if ! id dstatus ; then
+  # Create service user
+  echo "> Creating service user: dstatus"
+  echo ">   Creating user"
+  useradd -s /usr/sbin/nologin --system -M -d /etc/device-status dstatus
+  echo
+fi
 
 # Setup service
+echo "> Set user ownership for application directory"
+chown -R dstatus:dstatus /etc/device-status
 echo "> Creating symlink to application"
 ln -s "$app_local/index.js" /etc/device-status/device-status.js
 echo "> Copy service file to system"
 cp "$app_local/device-status.service.template" /lib/systemd/system/device-status.service
 
 # Update service with configurations
-updateConfiguration() "Environment=HOST=" app_host /lib/systemd/system/device-status.service
-updateConfiguration() "Environment=PORT=" app_port /lib/systemd/system/device-status.service
+updateConfiguration "HOST" "$app_host" /lib/systemd/system/device-status.service
+updateConfiguration "PORT" "$app_port" /lib/systemd/system/device-status.service
 
 
 # Restart systemctl
@@ -114,9 +125,9 @@ echo "> Start device-status service"
 systemctl start device-status
 
 # Wait 10 seconds
-echo "> Waiting 10 seconds for service boot"
-echo
 timer=10
+echo "> Waiting $timer seconds for service boot"
+echo
 while [ $timer -gt 0 ]; do
   sleep 1;
   printf "$timer..."
@@ -124,18 +135,37 @@ while [ $timer -gt 0 ]; do
 done
 echo "done"
 
-# Curl service
-if [[ ! curl -s "$app_host:$app_port/info" ]]; then
-  echo "> !! Error starting device-status.service !!"
-  echo "> Removing configurations:"
-  undoScript()
-  echo "  - Check logs by running: sudo systemctl status device-status"
-  echo
+printf "> Checking service is running..."
+if ! systemctl is-active --quiet device-status; then
+  echo "Service not running"
+  systemctl status device-status
 
-  exit 1;
-else
-  echo "> Service running successfully!"
-fi;
+  abort
+else 
+  echo "Service is running"
+fi
+echo
+
+# Curl service
+printf "> SKIP - Checking service at: $app_host:$app_port/info..."
+# curl "http://$app_host:$app_port/info"
+# curl_result=$?
+# if [ $curl_result -ne 0 ]; then
+#   echo "Error ($curl_result)!"
+#   echo "> !! Error starting device-status.service !!"
+#   echo "> Removing configurations:"
+#   echo ">  Check logs by running: sudo systemctl status device-status"
+#   echo
+
+#   systemctl status device-status
+
+#   abort $curl_result
+
+#   exit 1;
+# else
+#   echo "Success!"
+#   echo "> Service running successfully!"
+# fi;
 
 # Enable on reboot
 echo "> Service enabled on reboot"
