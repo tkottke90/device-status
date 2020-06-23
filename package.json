@@ -6,7 +6,9 @@
   "scripts": {
     "start": "NODE_ENV=production PORT=9000 HOST=127.0.0.1 node index.js",
     "start:dev": "NODE_ENV=development PORT=3030 HOST=127.0.0.1 nodemon index.js",
-    "test": "NODE_ENV=testing PORT=9000 HOST=localhost mocha tests/ --recursive --exit --reporter mochawesome"
+    "test": "NODE_ENV=testing PORT=9000 HOST=localhost mocha tests/ --recursive --exit --reporter mochawesome",
+    "deploy": "./deploy.sh",
+    "remove": "./remove.sh"
   },
   "keywords": [
     "NodeJS",
