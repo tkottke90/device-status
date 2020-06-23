@@ -15,6 +15,7 @@ class Environment {
     // Global
     this.NODE_ENV = this.loadVariable('NODE_ENV');
     this.CWD = process.cwd();
+    this.writeToConsole(`  CWD: ${this.CWD}`);
     this.PORT = this.loadVariable('PORT');
     this.HOST = this.loadVariableOrDefault('HOST', '0.0.0.0');
 
