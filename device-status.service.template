@@ -5,10 +5,11 @@ After=network.target
 
 [Service]
 Environment=NODE_ENV=production
+Environment=PORT=11000
 Environment=HOST=127.0.0.1
-Environment=PORT=40000
 Type=simple
 User=dstatus
+WorkingDirectory=/etc/device-status
 ExecStart=/usr/bin/node /etc/device-status/device-status.js
 Restart=on-failure
 
